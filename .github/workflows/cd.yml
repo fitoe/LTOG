@@ -1,13 +1,9 @@
-name: Build Release Installer
-run-name: Build LTOG ${{ inputs.version }} installer
+name: cd
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version, for example 1.0.0'
-        required: true
-        type: string
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: write
@@ -25,14 +21,15 @@ jobs:
       - name: Validate version
         shell: pwsh
         env:
-          INPUT_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          $version = $env:INPUT_VERSION
+          $tag = $env:RELEASE_TAG
+          $version = $tag -replace '^v', ''
           if ($version -notmatch '^\d+\.\d+\.\d+(\.\d+)?$') {
-            throw "Version must look like 1.0.0 or 1.0.0.0. Got '$version'."
+            throw "Tag must look like v1.0.0 or v1.0.0.0. Got '$tag'."
           }
           "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
-          "RELEASE_TAG=v$version" >> $env:GITHUB_ENV
+          "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
 
       - name: Configure Git line endings
         shell: pwsh
