@@ -1,4 +1,0 @@
-[submodule "third_party/ltfs"]
-	path = third_party/ltfs
-	url = https://github.com/nix-community/hpe-ltfs.git
-	ignore = dirty

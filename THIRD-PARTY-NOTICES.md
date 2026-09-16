@@ -5,7 +5,7 @@ LTOG as a whole is licensed under the **GNU General Public License v3.0** (see
 installer produced from `installer/` — additionally include third-party
 components under their own licenses, listed below. Full license texts are in the
 [`licenses/`](licenses/) folder (and are shipped alongside the binaries by the
-installer and by `scripts/build.sh`).
+installer).
 
 Nothing here restricts your rights under the GPL for the LTOG-original portions;
 each third-party component is governed solely by its own license.
@@ -19,11 +19,12 @@ each third-party component is governed solely by its own license.
 
 - **License:** GNU Lesser General Public License v2.1 — [`licenses/LGPL-2.1.txt`](licenses/LGPL-2.1.txt)
 - **Copyright:** © IBM Corporation; © Hewlett-Packard / HPE; © OSR Open Systems Resources, Inc.
-- **Corresponding source:** the pristine upstream tree is the `third_party/ltfs`
-  git submodule in this repository, and the modifications are the patch series in
-  [`patches/`](patches/) — both offered under LGPL-2.1 so they remain
-  upstreamable. (LGPL-2.1 code may be conveyed as part of a GPLv3 work via
-  LGPL §3.) Upstream origin: <https://github.com/nix-community/hpe-ltfs>.
+- **Corresponding source:** these binaries are built by the
+  [WinLtfs](https://github.com/rlaphoenix/WinLtfs) project, which holds the
+  pristine upstream tree and the WinFsp-port patch series — both offered under
+  LGPL-2.1 so they remain upstreamable. (LGPL-2.1 code may be conveyed as part of
+  a GPLv3 work via LGPL §3.) Upstream origin:
+  <https://github.com/leavelet/ltfs-hp>.
 
 ## WinFsp — GPL-3.0 with FLOSS exception
 

@@ -1,6 +1,3 @@
-# Build staging (WinFsp dev files copied by scripts/setup.sh)
-/build/
-
 # Build output (binaries, runtime DLLs, generated ltfs.conf)
 /dist/
 /dist24/

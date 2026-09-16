@@ -1,34 +1,34 @@
 <#
 .SYNOPSIS
-    One-shot clean build of LTOG: the LTFS engine + WinFsp port, the WinUI 3 GUI,
+    One-shot clean build of LTOG: the WinLtfs native engine, the WinUI 3 GUI,
     and the Windows installer.
 
 .DESCRIPTION
-    Wipes previous build output (so nothing stale survives), then builds, in order:
+    Wipes previous build output (so nothing stale survives), then assembles, in order:
 
-      1. LTFS engine + WinFsp port  -> dist\        (via MSYS2: scripts/setup.sh + build.sh)
+      1. WinLtfs native engine      -> dist\        (downloaded, pinned release zip)
       2. Self-contained WinUI 3 GUI -> dist\gui     (dotnet build, .NET baked in)
       3. Windows installer          -> installer\Output\  (installer\build-installer.ps1)
+
+    The LTFS engine + WinFsp port (ltfs.exe, backends, winfsp-x64.dll) is built by
+    the WinLtfs project (https://github.com/rlaphoenix/WinLtfs); LTOG bundles a
+    pinned, checksum-verified release of it. No MSYS2/WinFsp toolchain needed here.
 
     Run from a normal PowerShell prompt (no elevation needed):
 
         pwsh -File build.ps1
 
     Build prerequisites (the script checks for these and fails clearly if missing):
-      * MSYS2 with the LTFS/WinFsp build deps (see scripts/setup.sh) - unless -SkipNative
-      * WinFsp installed with the "Developer" feature                - first native build only
+      * Internet access to fetch the pinned WinLtfs release - unless -SkipNative
       * .NET 8 SDK
       * Inno Setup 6.3+ (build-installer.ps1 can install it via winget)
 
 .PARAMETER SkipNative
-    Reuse the native LTFS/WinFsp binaries already in dist\ and skip the (slow) MSYS2
-    build. Use when iterating on the GUI/installer. Fails if dist\ltfs.exe is absent.
+    Reuse the WinLtfs binaries already in dist\ and skip the download. Use when
+    iterating on the GUI/installer. Fails if dist\ltfs.exe is absent.
 
 .PARAMETER NoInstaller
     Build the engine and GUI but stop before the installer.
-
-.PARAMETER Msys2Root
-    Path to the MSYS2 installation. Default: C:\msys64.
 
 .PARAMETER Version
     Version embedded into the GUI assembly and installer. Default: 1.0.0.
@@ -43,7 +43,6 @@
 param(
     [switch]$SkipNative,
     [switch]$NoInstaller,
-    [string]$Msys2Root = 'C:\msys64',
     [ValidatePattern('^\d+\.\d+\.\d+(\.\d+)?$')]
     [string]$Version = '1.0.0'
 )
@@ -57,15 +56,13 @@ $GuiDir       = Join-Path $Root 'gui'
 $InstallerDir = Join-Path $Root 'installer'
 $GuiOutSub    = 'bin\x64\Release\net8.0-windows10.0.19041.0\win-x64'   # self-contained output
 
+# Pinned WinLtfs native release that LTOG bundles. Bump both together when
+# updating (get the SHA256 from the release's "digest" or `Get-FileHash`).
+$WinLtfsVersion    = '1.0.0'
+$WinLtfsDistSha256 = '83D04BD723AB2E691584D9BC728753C47889FDE716F309DCF65BCF272AAF2A88'
+
 function Step([string]$m) { Write-Host "`n==> $m" -ForegroundColor Cyan }
 function Info([string]$m) { Write-Host "    $m" }
-
-# Convert a Windows path to an MSYS2/Unix path: C:\a\b -> /c/a/b
-function ConvertTo-MsysPath([string]$p) {
-    $p = $p -replace '\\', '/'
-    if ($p -match '^([A-Za-z]):(.*)$') { return '/' + $Matches[1].ToLower() + $Matches[2] }
-    return $p
-}
 
 # Delete a path, but only if it lives inside the repo (never touch anything outside).
 function Remove-RepoPath([string]$path) {
@@ -94,42 +91,29 @@ if ($SkipNative) {
 }
 Info 'clean'
 
-# ------------------------------------------------- 2. native (LTFS + WinFsp) ---
+# -------------------------------------------- 2. native (WinLtfs release) ---
 if ($SkipNative) {
-    Step 'Skipping native LTFS/WinFsp build (-SkipNative)'
+    Step 'Skipping WinLtfs download (-SkipNative)'
     if (-not (Test-Path (Join-Path $Dist 'ltfs.exe'))) {
-        throw "dist\ltfs.exe is missing - cannot use -SkipNative without a prior native build."
+        throw "dist\ltfs.exe is missing - cannot use -SkipNative without a prior download."
     }
     Info 'reusing existing dist\ native binaries'
 } else {
-    Step 'Building LTFS engine + WinFsp port (MSYS2 MINGW64)'
-    $bash = Join-Path $Msys2Root 'usr\bin\bash.exe'
-    if (-not (Test-Path $bash)) {
-        throw "MSYS2 bash not found at '$bash'. Install MSYS2 (https://www.msys2.org) or pass -Msys2Root. " +
-              "Or use -SkipNative to reuse existing native binaries."
+    Step "Fetching WinLtfs $WinLtfsVersion native engine"
+    $zip = Join-Path ([IO.Path]::GetTempPath()) "WinLtfs-v$WinLtfsVersion.zip"
+    $url = "https://github.com/rlaphoenix/WinLtfs/releases/download/" +
+           "v$WinLtfsVersion/WinLtfs-v$WinLtfsVersion.zip"
+    Invoke-WebRequest -Uri $url -OutFile $zip
+    $actual = (Get-FileHash $zip -Algorithm SHA256).Hash
+    if ($actual -ne $WinLtfsDistSha256) {
+        throw "WinLtfs zip SHA256 mismatch: got $actual, expected $WinLtfsDistSha256."
     }
-    $repoUnix = ConvertTo-MsysPath $Root
-    # setup.sh only on a fresh tree (no Makefile yet); always make-clean for a clean compile.
-    $bashScript = @"
-set -e
-cd '$repoUnix'
-if [ ! -f third_party/ltfs/ltfs/Makefile ]; then
-    echo '--- one-time setup.sh (deps, WinFsp staging, patches, configure) ---'
-    ./scripts/setup.sh
-fi
-echo '--- make clean ---'
-./scripts/build.sh clean 2>/dev/null || true
-echo '--- compile + stage dist ---'
-./scripts/build.sh all
-"@
-    $env:MSYSTEM = 'MINGW64'
-    $env:CHERE_INVOKING = '1'
-    & $bash '-l' '-c' $bashScript
-    if ($LASTEXITCODE -ne 0) { throw "native build failed (exit $LASTEXITCODE)." }
+    New-Item -ItemType Directory -Force -Path $Dist | Out-Null
+    Expand-Archive -LiteralPath $zip -DestinationPath $Dist -Force
     if (-not (Test-Path (Join-Path $Dist 'ltfs.exe'))) {
-        throw "native build did not produce dist\ltfs.exe."
+        throw "WinLtfs zip did not contain ltfs.exe."
     }
-    Info 'LTFS engine + WinFsp DLL staged into dist\'
+    Info 'WinLtfs engine + WinFsp DLL staged into dist\'
 }
 
 # ------------------------------------------------------------------ 3. GUI ---
