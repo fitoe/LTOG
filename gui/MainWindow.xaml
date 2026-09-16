@@ -504,7 +504,7 @@
                                     <TextBlock TextWrapping="Wrap" Opacity="0.85" IsTextSelectionEnabled="True"
                                                Text="OSR Open Systems Resources — the original Windows FUSE integration in the HP tree." />
                                     <TextBlock TextWrapping="Wrap" Opacity="0.85" IsTextSelectionEnabled="True"
-                                               Text="AMIA Open Source — for preserving the HP LTFS source tree after HPE stopped distributing it." />
+                                               Text="WinLtfs — the LTFS + WinFsp tape engine LTOG bundles, porting HP's LTFS to WinFsp for modern Windows." />
                                     <TextBlock TextWrapping="Wrap" Opacity="0.85" IsTextSelectionEnabled="True"
                                                Text="Bill Zissimopoulos — WinFsp, whose FUSE-compatible layer and signed driver make this approach possible." />
                                     <TextBlock TextWrapping="Wrap" Opacity="0.65" FontSize="12"
