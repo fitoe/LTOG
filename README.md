@@ -97,19 +97,6 @@ pwsh -ExecutionPolicy Bypass -File installer\build-installer.ps1
 
 It fetches what it needs and writes `setup.exe` to `installer\Output\`.
 
-## Repository layout
-
-| Path               | Content                                                                                       |
-| ------------------ | --------------------------------------------------------------------------------------------- |
-| `gui/`             | LTOG.Gui, WinUI 3 configuration app (the primary interface)                                   |
-| `installer/`       | Inno Setup script + build helper for the Windows installer                                    |
-| `licenses/`        | full license texts for bundled third-party components (see `THIRD-PARTY-NOTICES.md`)           |
-| `docs/`            | porting analysis & engineering log                                                            |
-
-The native LTFS engine + WinFsp port lives in a separate project,
-[WinLtfs](https://github.com/rlaphoenix/WinLtfs), and is bundled here as a
-pinned release rather than built from source in this repo.
-
 ## Credit
 
 This project stands almost entirely on other people's work:
