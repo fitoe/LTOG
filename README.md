@@ -97,27 +97,6 @@ pwsh -ExecutionPolicy Bypass -File installer\build-installer.ps1
 
 It fetches what it needs and writes `setup.exe` to `installer\Output\`.
 
-## Credit
-
-This project stands almost entirely on other people's work:
-
-- **IBM** - the original Linear Tape File System Single Drive Edition;
-  `libltfs` and the core utilities are IBM Almaden Research code.
-- **Hewlett-Packard / HPE** - the Windows port (StoreOpen 3.5.0) and the
-  `ltotape` drive backend for HP LTO drives.
-- **OSR Open Systems Resources, Inc.** - the original Windows FUSE
-  integration work inside the HP tree.
-- **nix-community** - for preserving HPE's LGPL LTFS source after HPE stopped
-  distributing it
-  ([nix-community/hpe-ltfs](https://github.com/nix-community/hpe-ltfs)).
-- **leavelet** - for preserving HPE's LGPL LTFS source (StoreOpen 3.5.0) after
-  HPE stopped distributing it
-  ([leavelet/ltfs-hp](https://github.com/leavelet/ltfs-hp)).
-- **Bill Zissimopoulos** - [WinFsp](https://winfsp.dev), whose excellent
-  FUSE-compatible layer and properly signed driver make this whole approach
-  possible.
-- Assistance with porting and orchestration by Claude (Anthropic).
-
 ## Licensing
 
 LTOG as a whole is distributed under the **GNU General Public License v3.0**
@@ -126,31 +105,7 @@ LTOG as a whole is distributed under the **GNU General Public License v3.0**
 A full per-component inventory — every redistributed binary, its license,
 copyright, and corresponding source — is in
 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), with the license texts in
-[`licenses/`](licenses/). The installer ships these alongside the binaries. In
-summary:
-
-- Everything original to this repository (tooling, GUI, installer,
-  documentation) is **GPL-3.0**.
-- The LTFS engine + WinFsp port (from
-  [WinLtfs](https://github.com/rlaphoenix/WinLtfs)) is **LGPL-2.1**, © IBM,
-  HP/HPE, OSR, so it remains upstreamable. (LGPL-2.1 code may be conveyed as part
-  of a GPLv3 work via LGPL §3.)
-- **WinFsp** is GPLv3 with a FLOSS exception, © Bill Zissimopoulos. Its
-  redistributable `winfsp-x64.dll` is shipped in `dist/`, and the **installer
-  bundles the official WinFsp 2.1 MSI** and runs it to install the signed kernel
-  driver. The FLOSS exception is what lets the LGPL-2.1 LTFS binaries link the
-  WinFsp FUSE layer. Source: <https://github.com/winfsp/winfsp> (tag `v2.1`).
-- Binary `dist/` folders also contain MSYS2-built runtime DLLs: libxml2 (MIT),
-  ICU (Unicode v3), GNU libiconv (LGPL-2.1), zlib (Zlib), MinGW-w64 winpthreads
-  (MIT/BSD), and the GCC runtime `libgcc`/`libstdc++` (GPL-3.0 with the GCC
-  Runtime Library Exception).
-- The GUI (`dist/gui/`) is published **self-contained**: it bundles the **.NET 8
-  runtime** (MIT) and the **Microsoft Windows App SDK / WinUI 3** runtime plus
-  WebView2 (Microsoft Software License Terms). The Windows App SDK AI/ML stack
-  (ONNX Runtime, DirectML, WinML) is trimmed out — LTOG uses no AI APIs.
-  Nothing extra is installed separately: the WinUI 3 binaries import only the
-  OS-provided Universal CRT (Windows 10 1809+), so no .NET or Visual C++
-  redistributable is needed.
+[`licenses/`](licenses/). The installer ships these alongside the binaries.
 
 ---
 
