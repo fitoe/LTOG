@@ -133,12 +133,6 @@ public class MountManager
         }
         if (o.Verbosity == 1) Opt("trace");
         else if (o.Verbosity == 2) Opt("fulltrace");
-        // Real Windows volume label, set by WinFsp at mount time. The cartridge
-        // name was read from the MAM before mounting, so we can hand it over
-        // directly — no Explorer registry override needed. (FUSE splits -o values
-        // on commas, so flatten any comma in the label to a space.)
-        if (!string.IsNullOrEmpty(m.VolumeName))
-            Opt($"volname={m.VolumeName!.Replace(',', ' ')}");
 
         var psi = new ProcessStartInfo(LtfsEnv.LtfsExe)
         {
@@ -183,8 +177,6 @@ public class MountManager
 
         m.State = "Mounted";
         scope.Line($"Volume mounted on {m.Letter} — WinFsp now serving requests.");
-        if (!string.IsNullOrEmpty(m.VolumeName))
-            scope.Line($"Volume label \"{m.VolumeName}\" set via WinFsp (-o volname).");
     }
 
     /// <summary>
