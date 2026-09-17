@@ -150,7 +150,5 @@ public sealed partial class SchemaViewerWindow : Window
         Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
     }
 
-    private void Close_Click(object sender, RoutedEventArgs e) => Close();
-
     private static string Blank(string value) => string.IsNullOrWhiteSpace(value) ? "Not specified" : value;
 }

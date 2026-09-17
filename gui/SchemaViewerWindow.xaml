@@ -5,7 +5,7 @@
     xmlns:local="using:LTOG.Gui"
     Title="LTOG">
 
-    <Grid x:Name="Root" Padding="18" ColumnSpacing="18">
+    <Grid x:Name="Root" Padding="18" RowSpacing="14">
         <Grid.Resources>
             <Style x:Key="PanelBorder" TargetType="Border">
                 <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
@@ -20,38 +20,52 @@
             </Style>
         </Grid.Resources>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="13*" />
-            <ColumnDefinition Width="10*" />
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-        <Border Style="{StaticResource PanelBorder}" Padding="0">
-            <TreeView x:Name="SchemaTree"
-                      ItemInvoked="SchemaTree_ItemInvoked"
-                      Expanding="SchemaTree_Expanding">
-                <TreeView.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal" Spacing="7">
-                            <FontIcon Glyph="{Binding Content.IconGlyph}" FontSize="16" Opacity="0.85" />
-                            <TextBlock Text="{Binding Content.Name}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </TreeView.ItemTemplate>
-            </TreeView>
-        </Border>
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="SelectedPathBox" IsReadOnly="True" />
+            <Button Grid.Column="1" Content="Copy" MinWidth="76"
+                    Click="CopyPath_Click" />
+        </Grid>
 
-        <Grid Grid.Column="1" RowSpacing="14">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        <Grid Grid.Row="1" ColumnSpacing="18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="13*" />
+                <ColumnDefinition Width="10*" />
+            </Grid.ColumnDefinitions>
 
-            <Border Style="{StaticResource PanelBorder}">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Cartridge properties"
-                               Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <Border Style="{StaticResource PanelBorder}" Padding="0">
+                <TreeView x:Name="SchemaTree"
+                          ItemInvoked="SchemaTree_ItemInvoked"
+                          Expanding="SchemaTree_Expanding">
+                    <TreeView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <FontIcon Glyph="{Binding Content.IconGlyph}" FontSize="16" Opacity="0.85" />
+                                <TextBlock Text="{Binding Content.Name}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </Border>
+
+            <Grid Grid.Column="1" RowSpacing="14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Style="{StaticResource PanelBorder}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Cartridge properties"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}" />
                     <Grid ColumnSpacing="8" RowSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -96,17 +110,7 @@
                 </StackPanel>
             </Border>
 
-            <Grid Grid.Row="1" ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBox x:Name="SelectedPathBox" IsReadOnly="True" />
-                <Button Grid.Column="1" Content="Copy" MinWidth="76"
-                        Click="CopyPath_Click" />
-            </Grid>
-
-            <Border Grid.Row="2" Style="{StaticResource PanelBorder}">
+                <Border Grid.Row="1" Style="{StaticResource PanelBorder}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Auto">
                     <StackPanel Spacing="8">
@@ -155,10 +159,8 @@
                         </Grid>
                     </StackPanel>
                 </ScrollViewer>
-            </Border>
-
-            <Button Grid.Row="3" Content="Close" MinWidth="110"
-                    HorizontalAlignment="Right" Click="Close_Click" />
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
