@@ -437,6 +437,79 @@
                                 </StackPanel>
                             </Border>
                         </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Text="Advanced mount options" Style="{StaticResource SectionHeader}" />
+                            <Border Style="{StaticResource Card}">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Spacing="4">
+                                        <CheckBox x:Name="AppendOnlyCheck"
+                                                  Content="Append-only mode (LTO-7 and newer)"
+                                                  Click="SettingChanged" />
+                                        <TextBlock FontSize="12" Opacity="0.65" TextWrapping="Wrap"
+                                                   IsTextSelectionEnabled="True"
+                                                   Text="Stops data already on the tape being overwritten or erased — files can be added but not changed or removed. Only supported on LTO-7 and newer drives." />
+                                    </StackPanel>
+                                    <StackPanel Spacing="8">
+                                        <CheckBox x:Name="OverrideIndexCheck"
+                                                  Content="Request mount-time override of formatted configuration"
+                                                  Click="SettingChanged" />
+                                        <StackPanel Margin="28,0,0,0" Spacing="8">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="Files may be placed in the index partition if size &#8804;"
+                                                           VerticalAlignment="Center" TextWrapping="Wrap" />
+                                                <NumberBox x:Name="IndexSizeBox" Minimum="1" Maximum="999999"
+                                                           SmallChange="1" SpinButtonPlacementMode="Compact" Width="120"
+                                                           ValueChanged="IndexSize_ValueChanged" />
+                                                <ComboBox x:Name="IndexUnitCombo" VerticalAlignment="Center"
+                                                          SelectionChanged="SettingChanged">
+                                                    <ComboBoxItem Content="KB" />
+                                                    <ComboBoxItem Content="MB" />
+                                                    <ComboBoxItem Content="GB" />
+                                                </ComboBox>
+                                            </StackPanel>
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="File name pattern(s)" />
+                                                <TextBox x:Name="IndexNameBox" PlaceholderText="*.jpg:*.gif"
+                                                         LostFocus="SettingChanged" />
+                                                <TextBlock FontSize="12" Opacity="0.65" TextWrapping="Wrap"
+                                                           IsTextSelectionEnabled="True"
+                                                           Text="Filename pattern(s) to consider writing to index partition, colon-separated list e.g. *.jpg:*.gif" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <TextBlock FontSize="12" Opacity="0.65" TextWrapping="Wrap"
+                                                   IsTextSelectionEnabled="True"
+                                                   Text="Keeps small, frequently-used files in the fast index partition for quicker access. Only applies if the cartridge was formatted to permit it (mkltfs without --no-override)." />
+                                    </StackPanel>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Support ticket folder" />
+                                        <TextBox x:Name="LogDirBox"
+                                                 PlaceholderText="C:\ProgramData\LTOG"
+                                                 LostFocus="SettingChanged" />
+                                        <TextBlock FontSize="12" Opacity="0.65" TextWrapping="Wrap"
+                                                   IsTextSelectionEnabled="True"
+                                                   Text="Folder where LTFS should store all support tickets generated" />
+                                    </StackPanel>
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Logging verbosity" VerticalAlignment="Center" />
+                                        <ComboBox x:Name="VerbosityCombo" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="SettingChanged">
+                                            <ComboBoxItem Content="Normal" />
+                                            <ComboBoxItem Content="Verbose (trace)" />
+                                            <ComboBoxItem Content="Full trace (slow)" />
+                                        </ComboBox>
+                                    </Grid>
+                                    <TextBlock FontSize="12" Opacity="0.65" TextWrapping="Wrap"
+                                               IsTextSelectionEnabled="True"
+                                               Text="These apply to new mounts. Higher verbosity noticeably slows the volume and is only for diagnosing problems." />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
 

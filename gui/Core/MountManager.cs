@@ -14,6 +14,12 @@ public class MountOptions
     public int SyncPolicyMode;             // 0 = unmount, 1 = periodic
     public int SyncPeriodMinutes = 5;
 
+    // --- advanced options ---
+    public bool AppendOnly;                 // -o scsi_append_only_mode=on (LTO-7+)
+    public string? IndexRules;              // -o rules=<expr> (index-partition placement)
+    public string? LogDirectory;            // -o log_directory=<dir> (support-ticket folder)
+    public int Verbosity;                   // 0 = normal, 1 = trace, 2 = fulltrace
+
     public string SyncTypeOption =>
         !OverrideSyncPolicy ? "sync_type=close"
         : SyncPolicyMode == 0 ? "sync_type=unmount"
@@ -30,6 +36,9 @@ public class MountOptions
                 : $"Index written every {SyncPeriodMinutes} min");
             if (CaptureIndex) parts.Add("index snapshots");
             if (EjectAfterUnmount) parts.Add("eject after unmount");
+            if (AppendOnly) parts.Add("append-only");
+            if (!string.IsNullOrWhiteSpace(IndexRules)) parts.Add("index-partition rules");
+            if (Verbosity > 0) parts.Add(Verbosity == 2 ? "full trace" : "verbose");
             return string.Join("  ·  ", parts);
         }
     }
@@ -112,6 +121,18 @@ public class MountManager
         }
         if (o.ReadOnly) Opt("ro");
         if (o.EjectAfterUnmount) Opt("eject");
+        // Advanced options. The engine validates each (e.g. append-only is rejected
+        // on drives that don't support it) and logs the reason to the mount entry.
+        if (o.AppendOnly) Opt("scsi_append_only_mode=on");
+        if (!string.IsNullOrWhiteSpace(o.IndexRules)) Opt($"rules={o.IndexRules!.Trim()}");
+        if (!string.IsNullOrWhiteSpace(o.LogDirectory))
+        {
+            var logDir = o.LogDirectory!.Trim();
+            try { Directory.CreateDirectory(logDir); } catch { /* engine will report if unwritable */ }
+            Opt($"log_directory={logDir.Replace('\\', '/')}");
+        }
+        if (o.Verbosity == 1) Opt("trace");
+        else if (o.Verbosity == 2) Opt("fulltrace");
         // Real Windows volume label, set by WinFsp at mount time. The cartridge
         // name was read from the MAM before mounting, so we can hand it over
         // directly — no Explorer registry override needed. (FUSE splits -o values

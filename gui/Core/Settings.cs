@@ -20,6 +20,20 @@ public class Settings
     /// <summary>0 = when volume is dismounted, 1 = periodically every N minutes</summary>
     public int SyncPolicyMode { get; set; } = 1;
     public int SyncPeriodMinutes { get; set; } = 5;
+
+    // --- advanced mount options ---
+    public const string DefaultLogDirectory = @"C:\ProgramData\LTOG";
+    public bool AppendOnly { get; set; }
+
+    // Index-partition placement (mount-time override of the formatted policy).
+    public bool OverrideIndexPlacement { get; set; }
+    public int IndexMaxSize { get; set; } = 1;
+    public int IndexSizeUnit { get; set; } = 1;
+    public string IndexNamePatterns { get; set; } = "";
+    public string LogDirectory { get; set; } = DefaultLogDirectory;
+    /// <summary>0 = normal, 1 = verbose (trace), 2 = full trace (fulltrace)</summary>
+    public int Verbosity { get; set; }
+
     public string? DistPath { get; set; }                  // optional override of auto-detection
 
     public string LastTab { get; set; } = "mount";
@@ -45,7 +59,12 @@ public class Settings
         try
         {
             if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath)) ?? new Settings();
+            {
+                var s = JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath)) ?? new Settings();
+                if (string.IsNullOrWhiteSpace(s.LogDirectory))
+                    s.LogDirectory = DefaultLogDirectory;
+                return s;
+            }
         }
         catch { /* corrupted settings -> defaults */ }
         return new Settings();
@@ -55,5 +74,16 @@ public class Settings
     {
         Directory.CreateDirectory(Dir);
         File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonOpts));
+    }
+
+    /// <summary>The ltfs <c>-o rules=</c> value from the index-placement fields, or "" when off.</summary>
+    public string ComposeIndexRules()
+    {
+        if (!OverrideIndexPlacement) return "";
+        string unit = IndexSizeUnit switch { 0 => "K", 2 => "G", _ => "M" };
+        string rules = $"size={Math.Max(1, IndexMaxSize)}{unit}";
+        if (!string.IsNullOrWhiteSpace(IndexNamePatterns))
+            rules += $"/name={IndexNamePatterns.Trim()}";
+        return rules;
     }
 }

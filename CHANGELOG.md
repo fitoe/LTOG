@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Advanced mount options in Settings: append-only mode (LTO-7+), index-partition
+  placement rules, a support-ticket (log) folder, and a logging-verbosity level —
+  passed through to the LTFS engine on new mounts.
 - Visual LTFS index viewer: browse the off-tape index (`.schema`) backups of a
   volume's metadata directly in the GUI.
 - LTO-9 tape support, via the updated LTFS engine.

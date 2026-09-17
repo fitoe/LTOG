@@ -279,7 +279,15 @@ public sealed partial class MainWindow : Window
         PolicyPeriodicRadio.IsChecked = _settings.SyncPolicyMode == 1;
         PeriodBox.Value = _settings.SyncPeriodMinutes;
         SchemaSortCombo.SelectedIndex = Math.Clamp(_settings.IndexSort, 0, 3);
+        AppendOnlyCheck.IsChecked = _settings.AppendOnly;
+        OverrideIndexCheck.IsChecked = _settings.OverrideIndexPlacement;
+        IndexSizeBox.Value = _settings.IndexMaxSize;
+        IndexUnitCombo.SelectedIndex = Math.Clamp(_settings.IndexSizeUnit, 0, 2);
+        IndexNameBox.Text = _settings.IndexNamePatterns;
+        LogDirBox.Text = _settings.LogDirectory;
+        VerbosityCombo.SelectedIndex = Math.Clamp(_settings.Verbosity, 0, 2);
         UpdatePolicyEnabled();
+        UpdateIndexEnabled();
         _loadingUi = false;
     }
 
@@ -291,10 +299,25 @@ public sealed partial class MainWindow : Window
         PeriodBox.IsEnabled = en && PolicyPeriodicRadio.IsChecked == true;
     }
 
+    private void UpdateIndexEnabled()
+    {
+        bool en = OverrideIndexCheck.IsChecked == true;
+        IndexSizeBox.IsEnabled = en;
+        IndexUnitCombo.IsEnabled = en;
+        IndexNameBox.IsEnabled = en;
+    }
+
+    private void IndexSize_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (_loadingUi) return;
+        SaveSettingsFromUi();
+    }
+
     private void SettingChanged(object sender, RoutedEventArgs e)
     {
         if (_loadingUi) return;
         UpdatePolicyEnabled();
+        UpdateIndexEnabled();
         SaveSettingsFromUi();
     }
 
@@ -312,6 +335,14 @@ public sealed partial class MainWindow : Window
         _settings.OverrideSyncPolicy = OverridePolicyCheck.IsChecked == true;
         _settings.SyncPolicyMode = PolicyDismountRadio.IsChecked == true ? 0 : 1;
         _settings.SyncPeriodMinutes = double.IsNaN(PeriodBox.Value) ? 5 : Math.Max(1, (int)PeriodBox.Value);
+        _settings.AppendOnly = AppendOnlyCheck.IsChecked == true;
+        _settings.OverrideIndexPlacement = OverrideIndexCheck.IsChecked == true;
+        _settings.IndexMaxSize = double.IsNaN(IndexSizeBox.Value) ? 1 : Math.Max(1, (int)IndexSizeBox.Value);
+        _settings.IndexSizeUnit = Math.Max(0, IndexUnitCombo.SelectedIndex);
+        _settings.IndexNamePatterns = IndexNameBox.Text?.Trim() ?? "";
+        _settings.LogDirectory = string.IsNullOrWhiteSpace(LogDirBox.Text)
+            ? Settings.DefaultLogDirectory : LogDirBox.Text.Trim();
+        _settings.Verbosity = Math.Max(0, VerbosityCombo.SelectedIndex);
         _settings.Save();
     }
 
@@ -481,6 +512,10 @@ public sealed partial class MainWindow : Window
         OverrideSyncPolicy = _settings.OverrideSyncPolicy,
         SyncPolicyMode = _settings.SyncPolicyMode,
         SyncPeriodMinutes = _settings.SyncPeriodMinutes,
+        AppendOnly = _settings.AppendOnly,
+        IndexRules = _settings.ComposeIndexRules(),
+        LogDirectory = _settings.LogDirectory,
+        Verbosity = _settings.Verbosity,
     };
 
     /// <summary>Refresh the whole card: free letters, cartridge identity, status.</summary>
