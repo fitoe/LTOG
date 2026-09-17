@@ -22,7 +22,8 @@ public class Settings
     public int SyncPeriodMinutes { get; set; } = 5;
 
     // --- advanced mount options ---
-    public const string DefaultLogDirectory = @"C:\ProgramData\LTOG";
+    public static string DefaultLogDirectory =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LTOG");
     public bool AppendOnly { get; set; }
 
     // Index-partition placement (mount-time override of the formatted policy).

@@ -285,6 +285,7 @@ public sealed partial class MainWindow : Window
         IndexUnitCombo.SelectedIndex = Math.Clamp(_settings.IndexSizeUnit, 0, 2);
         IndexNameBox.Text = _settings.IndexNamePatterns;
         LogDirBox.Text = _settings.LogDirectory;
+        LogDirBox.PlaceholderText = Settings.DefaultLogDirectory;
         VerbosityCombo.SelectedIndex = Math.Clamp(_settings.Verbosity, 0, 2);
         UpdatePolicyEnabled();
         UpdateIndexEnabled();
