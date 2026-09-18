@@ -165,18 +165,9 @@
                                                           Click="SlotRemount_Click" />
                                             </StackPanel>
 
-                                            <!-- cartridge controls (disabled while mounted) -->
+                                            <!-- cartridge controls -->
                                             <Border Height="1" Margin="-16,4"
                                                     Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-                                            <StackPanel Orientation="Horizontal" Spacing="6"
-                                                        HorizontalAlignment="Right"
-                                                        Visibility="{x:Bind MountedNoticeVisibility, Mode=OneWay}">
-                                                <FontIcon Glyph="&#xE946;" FontSize="13" Opacity="0.7"
-                                                          VerticalAlignment="Center" Margin="0,1,0,0" />
-                                                <TextBlock Text="Cannot be used while mounted"
-                                                           FontSize="12" Opacity="0.75"
-                                                           VerticalAlignment="Center" />
-                                            </StackPanel>
                                             <Grid ColumnSpacing="8">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />

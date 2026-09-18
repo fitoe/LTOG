@@ -317,10 +317,6 @@ public sealed class DriveSlot : INotifyPropertyChanged
     public bool IsBusy => _phase is SlotPhase.Mounting or SlotPhase.Unmounting;
     public Visibility SpinnerVisibility => IsBusy ? Visibility.Visible : Visibility.Collapsed;
 
-    /// <summary>Utilities-card notice, shown while the drive is not idle.</summary>
-    public Visibility MountedNoticeVisibility =>
-        _phase == SlotPhase.Idle ? Visibility.Collapsed : Visibility.Visible;
-
     // ---- helpers -----------------------------------------------------------
 
     /// <summary>Replace the free-letter list, preserving the selection when possible.</summary>
@@ -354,7 +350,6 @@ public sealed class DriveSlot : INotifyPropertyChanged
         Raise(nameof(ButtonStyle));
         Raise(nameof(IsBusy));
         Raise(nameof(SpinnerVisibility));
-        Raise(nameof(MountedNoticeVisibility));
     }
 
     private void Raise(string name) =>
