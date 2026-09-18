@@ -69,7 +69,7 @@ pinned release.
 
 To build the engine from source yourself (MSYS2 + WinFsp toolchain), follow the
 build instructions in the [WinLtfs](https://github.com/rlaphoenix/WinLtfs) repo,
-then copy its `dist/` output over LTOG's `dist/`.
+then copy its `dist/` output into LTOG's `dist/winltfs/`.
 
 ### 2. GUI
 
@@ -84,7 +84,7 @@ In PowerShell:
 ```powershell
 cd gui  # enter gui folder
 dotnet build LTOG.Gui.csproj -c Release -p:Platform=x64  # build (self-contained)
-robocopy "bin\x64\Release\net8.0-windows10.0.19041.0\win-x64" "..\dist\gui" /E  # self-contained output -> ..\dist
+robocopy "bin\x64\Release\net8.0-windows10.0.19041.0\win-x64" "..\dist" /E  # self-contained output -> ..\dist
 ```
 
 ### 3. Installer

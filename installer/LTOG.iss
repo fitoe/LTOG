@@ -4,8 +4,8 @@
 ;  Bundles everything needed to run the LTOG GUI on a fresh Windows 10/11 x64
 ;  machine:
 ;
-;    * the WinUI 3 GUI (self-contained: .NET + Windows App SDK baked in) -> {app}\gui
-;    * the LTFS engine (ltfs/mkltfs/unltfs/ltfsck) + all runtime DLLs -> {app}
+;    * the WinUI 3 GUI (self-contained: .NET + Windows App SDK baked in) -> {app}
+;    * the LTFS engine (ltfs/mkltfs/unltfs/ltfsck) + all runtime DLLs -> {app}\winltfs
 ;    * WinFsp 2.1 (the signed virtual-drive driver) via its MSI
 ;
 ;  The GUI needs no external runtime (the .NET and Windows App SDK runtimes are
@@ -30,10 +30,10 @@
 #define MyAppPublisher  "rlaphoenix"
 #define MyAppURL        "https://github.com/rlaphoenix/LTOG"
 #define MyAppExeName    "LTOG.exe"
-; The GUI lives in a subfolder; LtfsEnv.Resolve() finds ltfs.exe/ltfs.conf by
-; walking up to the GUI exe's parent, so this MUST mirror the dist/ layout
-; (ltfs.exe at {app}, the GUI under {app}\gui).
-#define GuiDir          "gui"
+; The GUI sits at {app}; LtfsEnv.Resolve() finds the engine in a winltfs\ subfolder
+; next to it, so this MUST mirror the dist/ layout (GUI at {app}, engine under
+; {app}\winltfs, its ltfs.conf regenerated post-install).
+#define WinLtfsDir      "winltfs"
 
 ; Pinned prerequisite. build-installer.ps1 downloads this into redist\.
 #define WinFspMsi       "winfsp-2.1.25156.msi"
@@ -52,11 +52,11 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 UninstallDisplayName={#MyAppName}
-UninstallDisplayIcon={app}\{#GuiDir}\{#MyAppExeName}
+UninstallDisplayIcon={app}\{#MyAppExeName}
 LicenseFile=..\LICENSE
 OutputDir=Output
 OutputBaseFilename=LTOG-{#MyAppVersion}-setup
-SetupIconFile=..\dist\{#GuiDir}\Assets\icon.ico
+SetupIconFile=..\dist\Assets\icon.ico
 ; Maximum ratio: ultra preset + 64 MB dictionary, one solid stream. The payload
 ; has many near-identical WinAppSDK DLLs and per-locale .mui files, so the large
 ; dictionary + solid compression dedups aggressively across them.
@@ -103,17 +103,17 @@ Source: "..\licenses\*"; DestDir: "{app}\licenses"; Flags: recursesubdirs create
 Source: "redist\{#WinFspMsi}"; DestDir: "{tmp}"
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#GuiDir}\{#MyAppExeName}"; WorkingDir: "{app}\{#GuiDir}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#GuiDir}\{#MyAppExeName}"; WorkingDir: "{app}\{#GuiDir}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#GuiDir}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; \
-    WorkingDir: "{app}\{#GuiDir}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; \
+    WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 ; Regenerated at install time, so not tracked by the installer's file list.
-Type: files; Name: "{app}\ltfs.conf"
+Type: files; Name: "{app}\{#WinLtfsDir}\ltfs.conf"
 
 [Code]
 { ---------------------- prerequisite detection ----------------------------- }
@@ -197,7 +197,7 @@ procedure WriteLtfsConf;
 var
   Base, Conf, LF, Target: String;
 begin
-  Base := ExpandConstant('{app}');
+  Base := ExpandConstant('{app}\{#WinLtfsDir}');
   StringChangeEx(Base, '\', '/', True);   { FUSE/libltfs want forward slashes }
   LF := #10;
   Conf :=
@@ -211,7 +211,7 @@ begin
     'default driver ltotape_win' + LF +
     'default iosched unified' + LF +
     'default kmi none' + LF;
-  Target := ExpandConstant('{app}\ltfs.conf');
+  Target := ExpandConstant('{app}\{#WinLtfsDir}\ltfs.conf');
   if SaveStringToFile(Target, Conf, False) then
     DepLogLine('  wrote ' + Target)
   else

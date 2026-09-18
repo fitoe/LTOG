@@ -55,8 +55,8 @@ public sealed partial class MainWindow : Window
         if (!LtfsEnv.Resolve(_settings.DistPath))
         {
             _envOk = false;
-            EnvBar.Message = "ltfs.exe / ltfs.conf not found. Place this app inside the LTOG dist " +
-                             "folder (or a gui\\ subfolder of it), or set \"DistPath\" in " +
+            EnvBar.Message = "ltfs.exe / ltfs.conf not found. Place the WinLtfs engine in a " +
+                             "winltfs\\ subfolder next to this app, or set \"DistPath\" in " +
                              Settings.FilePath;
             EnvBar.IsOpen = true;
             EnvBar.Visibility = Visibility.Visible;

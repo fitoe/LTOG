@@ -99,9 +99,9 @@ function Find-Iscc {
 
 # --- 1. payload check -----------------------------------------------------
 Write-Step 'Checking application payload (..\dist)'
-if (-not (Test-Path (Join-Path $DistDir 'ltfs.exe')) -or
-    -not (Test-Path (Join-Path $DistDir 'gui\LTOG.exe'))) {
-    throw "dist\ is incomplete - expected ltfs.exe and gui\LTOG.exe under '$DistDir'. " +
+if (-not (Test-Path (Join-Path $DistDir 'winltfs\ltfs.exe')) -or
+    -not (Test-Path (Join-Path $DistDir 'LTOG.exe'))) {
+    throw "dist\ is incomplete - expected LTOG.exe and winltfs\ltfs.exe under '$DistDir'. " +
           "Build the LTFS engine and GUI first (see the repo README)."
 }
 Write-Host "    payload OK"

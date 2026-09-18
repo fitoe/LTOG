@@ -6,9 +6,11 @@
 .DESCRIPTION
     Wipes previous build output (so nothing stale survives), then assembles, in order:
 
-      1. WinLtfs native engine      -> dist\        (downloaded, pinned release zip)
-      2. Self-contained WinUI 3 GUI -> dist\gui     (dotnet build, .NET baked in)
+      1. WinLtfs native engine      -> dist\winltfs\  (downloaded, pinned release zip)
+      2. Self-contained WinUI 3 GUI -> dist\          (dotnet build, .NET baked in)
       3. Windows installer          -> installer\Output\  (installer\build-installer.ps1)
+
+    The licenses shipped in the WinLtfs release are kept at dist\licenses.
 
     The LTFS engine + WinFsp port (ltfs.exe, backends, winfsp-x64.dll) is built by
     the WinLtfs project (https://github.com/rlaphoenix/WinLtfs); LTOG bundles a
@@ -24,8 +26,8 @@
       * Inno Setup 6.3+ (build-installer.ps1 can install it via winget)
 
 .PARAMETER SkipNative
-    Reuse the WinLtfs binaries already in dist\ and skip the download. Use when
-    iterating on the GUI/installer. Fails if dist\ltfs.exe is absent.
+    Reuse the WinLtfs binaries already in dist\winltfs\ and skip the download. Use
+    when iterating on the GUI/installer. Fails if dist\winltfs\ltfs.exe is absent.
 
 .PARAMETER NoInstaller
     Build the engine and GUI but stop before the installer.
@@ -52,6 +54,8 @@ $ErrorActionPreference = 'Stop'
 
 $Root         = $PSScriptRoot
 $Dist         = Join-Path $Root 'dist'
+$DistWinLtfs  = Join-Path $Dist 'winltfs'   # native engine lives in a subfolder
+$DistLicenses = Join-Path $Dist 'licenses'
 $GuiDir       = Join-Path $Root 'gui'
 $InstallerDir = Join-Path $Root 'installer'
 $GuiOutSub    = 'bin\x64\Release\net8.0-windows10.0.19041.0\win-x64'   # self-contained output
@@ -84,8 +88,14 @@ Remove-RepoPath (Join-Path $GuiDir 'bin')
 Remove-RepoPath (Join-Path $GuiDir 'obj')
 Remove-RepoPath (Join-Path $InstallerDir 'Output')
 if ($SkipNative) {
-    Remove-RepoPath (Join-Path $Dist 'gui')   # keep native binaries, refresh GUI only
-    Info 'kept existing native binaries in dist\ (-SkipNative)'
+    # Keep the native engine (dist\winltfs) and licenses; wipe the GUI files that
+    # live directly in dist\ so nothing stale survives.
+    if (Test-Path -LiteralPath $Dist) {
+        Get-ChildItem -LiteralPath $Dist -Force |
+            Where-Object { $_.Name -notin @('winltfs', 'licenses') } |
+            ForEach-Object { Remove-RepoPath $_.FullName }
+    }
+    Info 'kept existing native binaries in dist\winltfs (-SkipNative)'
 } else {
     Remove-RepoPath $Dist
 }
@@ -94,10 +104,10 @@ Info 'clean'
 # -------------------------------------------- 2. native (WinLtfs release) ---
 if ($SkipNative) {
     Step 'Skipping WinLtfs download (-SkipNative)'
-    if (-not (Test-Path (Join-Path $Dist 'ltfs.exe'))) {
-        throw "dist\ltfs.exe is missing - cannot use -SkipNative without a prior download."
+    if (-not (Test-Path (Join-Path $DistWinLtfs 'ltfs.exe'))) {
+        throw "dist\winltfs\ltfs.exe is missing - cannot use -SkipNative without a prior download."
     }
-    Info 'reusing existing dist\ native binaries'
+    Info 'reusing existing dist\winltfs native binaries'
 } else {
     Step "Fetching WinLtfs $WinLtfsVersion native engine"
     $zip = Join-Path ([IO.Path]::GetTempPath()) "WinLtfs-v$WinLtfsVersion.zip"
@@ -108,12 +118,18 @@ if ($SkipNative) {
     if ($actual -ne $WinLtfsDistSha256) {
         throw "WinLtfs zip SHA256 mismatch: got $actual, expected $WinLtfsDistSha256."
     }
-    New-Item -ItemType Directory -Force -Path $Dist | Out-Null
-    Expand-Archive -LiteralPath $zip -DestinationPath $Dist -Force
-    if (-not (Test-Path (Join-Path $Dist 'ltfs.exe'))) {
+    New-Item -ItemType Directory -Force -Path $DistWinLtfs | Out-Null
+    Expand-Archive -LiteralPath $zip -DestinationPath $DistWinLtfs -Force
+    if (-not (Test-Path (Join-Path $DistWinLtfs 'ltfs.exe'))) {
         throw "WinLtfs zip did not contain ltfs.exe."
     }
-    Info 'WinLtfs engine + WinFsp DLL staged into dist\'
+    # The release ships its license texts under licenses\; keep those at dist\licenses.
+    $winltfsLicenses = Join-Path $DistWinLtfs 'licenses'
+    if (Test-Path -LiteralPath $winltfsLicenses) {
+        Remove-RepoPath $DistLicenses
+        Move-Item -LiteralPath $winltfsLicenses -Destination $DistLicenses
+    }
+    Info 'WinLtfs engine + WinFsp DLL staged into dist\winltfs (licenses -> dist\licenses)'
 }
 
 # ------------------------------------------------------------------ 3. GUI ---
@@ -135,10 +151,9 @@ $guiOut = Join-Path $GuiDir $GuiOutSub
 if (-not (Test-Path (Join-Path $guiOut 'LTOG.exe'))) {
     throw "GUI build output not found at $guiOut."
 }
-$distGui = Join-Path $Dist 'gui'
-New-Item -ItemType Directory -Force -Path $distGui | Out-Null
-Copy-Item (Join-Path $guiOut '*') -Destination $distGui -Recurse -Force
-Info 'self-contained GUI staged into dist\gui'
+New-Item -ItemType Directory -Force -Path $Dist | Out-Null
+Copy-Item (Join-Path $guiOut '*') -Destination $Dist -Recurse -Force
+Info 'self-contained GUI staged into dist\'
 
 # ------------------------------------------------------------ 4. installer ---
 if ($NoInstaller) {

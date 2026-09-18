@@ -1,6 +1,7 @@
 namespace LTOG.Gui.Core;
 
-/// <summary>Locates the LTOG dist directory (ltfs.exe + ltfs.conf + plugins).</summary>
+/// <summary>Locates the WinLtfs engine directory (ltfs.exe + ltfs.conf + plugins),
+/// which sits in a winltfs\ subfolder next to the GUI in a packaged install.</summary>
 public static class LtfsEnv
 {
     public static string? DistPath { get; private set; }
@@ -19,9 +20,8 @@ public static class LtfsEnv
         var candidates = new[]
         {
             settingsOverride,
-            exeDir,
-            Path.GetDirectoryName(exeDir),                       // gui exe inside dist\gui\
-            Path.Combine(Path.GetDirectoryName(exeDir) ?? "", "dist"),
+            Path.Combine(exeDir, "winltfs"),   // packaged: GUI in dist\, engine in dist\winltfs\
+            exeDir,                            // engine staged flat beside the GUI
         };
         foreach (var c in candidates)
         {
