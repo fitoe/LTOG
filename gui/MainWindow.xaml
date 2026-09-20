@@ -336,17 +336,10 @@
                                                         <Border Visibility="{x:Bind OutputVisibility, Mode=OneWay}"
                                                                 Background="{ThemeResource ControlFillColorSecondaryBrush}"
                                                                 CornerRadius="4" Padding="9,6">
-                                                            <ItemsControl ItemsSource="{x:Bind Lines}">
-                                                                <ItemsControl.ItemTemplate>
-                                                                    <DataTemplate x:DataType="local:LogLine">
-                                                                        <TextBlock Text="{x:Bind Text}"
-                                                                                   Foreground="{x:Bind Brush}"
-                                                                                   FontFamily="Consolas" FontSize="12"
-                                                                                   TextWrapping="Wrap"
-                                                                                   IsTextSelectionEnabled="True" />
-                                                                    </DataTemplate>
-                                                                </ItemsControl.ItemTemplate>
-                                                            </ItemsControl>
+                                                            <RichTextBlock local:LogParagraph.Source="{x:Bind Lines}"
+                                                                           FontFamily="Consolas" FontSize="12"
+                                                                           TextWrapping="Wrap"
+                                                                           IsTextSelectionEnabled="True" />
                                                         </Border>
 
                                                         <!-- result footer -->
