@@ -62,8 +62,8 @@ $GuiOutSub    = 'bin\x64\Release\net8.0-windows10.0.19041.0\win-x64'   # self-co
 
 # Pinned WinLtfs native release that LTOG bundles. Bump both together when
 # updating (get the SHA256 from the release's "digest" or `Get-FileHash`).
-$WinLtfsVersion    = '1.0.0'
-$WinLtfsDistSha256 = '83D04BD723AB2E691584D9BC728753C47889FDE716F309DCF65BCF272AAF2A88'
+$WinLtfsVersion    = '1.1.0'
+$WinLtfsDistSha256 = '3828250507EE479B52DC78BA620683B76B89D91A7745E0ECC98AEA447F25D6A5'
 
 function Step([string]$m) { Write-Host "`n==> $m" -ForegroundColor Cyan }
 function Info([string]$m) { Write-Host "    $m" }
