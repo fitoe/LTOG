@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Microsoft.UI.Xaml;
 
 namespace LTOG.Gui;
@@ -6,6 +8,9 @@ public partial class App : Application
 {
     public static bool AutoRemount { get; private set; }
     private MainWindow? _window;
+
+    private static Mutex? _singleInstance;
+    private const string InstanceMutexName = @"Global\LTOG-6E9D2B4A-1C3F-4E58-9A7D-2F5B8C1E4D0A";
 
     public App()
     {
@@ -22,6 +27,16 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        bool isNew = true;
+        try { _singleInstance = new Mutex(initiallyOwned: true, InstanceMutexName, out isNew); }
+        catch (Exception ex) { LogCrash($"single-instance guard skipped: {ex.Message}"); }
+        if (!isNew)
+        {
+            ActivateExistingWindow();   // bring the running LTOG forward, then bow out
+            Exit();
+            return;
+        }
+
         try
         {
             _window = new MainWindow();
@@ -33,6 +48,30 @@ public partial class App : Application
             throw;
         }
     }
+
+    /// <summary>Restore and foreground the already-running LTOG's main window.</summary>
+    private static void ActivateExistingWindow()
+    {
+        try
+        {
+            var me = Process.GetCurrentProcess();
+            foreach (var p in Process.GetProcessesByName(me.ProcessName))
+            {
+                if (p.Id == me.Id) continue;
+                var h = p.MainWindowHandle;
+                if (h == IntPtr.Zero) continue;
+                if (IsIconic(h)) ShowWindow(h, SW_RESTORE);
+                SetForegroundWindow(h);
+                break;
+            }
+        }
+        catch { /* best-effort; the duplicate still exits either way */ }
+    }
+
+    private const int SW_RESTORE = 9;
+    [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr hWnd);
+    [DllImport("user32.dll")] private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll")] private static extern bool IsIconic(IntPtr hWnd);
 
     private static void LogCrash(string text)
     {
