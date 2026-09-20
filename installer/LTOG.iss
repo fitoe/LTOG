@@ -105,7 +105,7 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDi
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; \
-    WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+    WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent runascurrentuser
 
 [Code]
 { ---------------------- prerequisite detection ----------------------------- }
