@@ -109,7 +109,7 @@ public class MountManager
 
         // Build the argument list once, so the logged command line is exactly
         // what we hand to the process.
-        var args = new List<string> { m.Letter, "-f" };
+        var args = new List<string> { $@"\\.\{m.Letter}", "-f" };
         void Opt(string s) { args.Add("-o"); args.Add(s); }
         Opt($"config_file={LtfsEnv.LtfsConfFuse}");
         Opt($"devname={m.Device.Replace('\\', '/')}");
