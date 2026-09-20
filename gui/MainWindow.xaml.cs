@@ -687,10 +687,13 @@ public sealed partial class MainWindow : Window
         foreach (var p in _settings.Mappings)
         {
             if (!Directory.Exists($@"{p.Letter}\")) continue;
-            int? pid = MountManager.FindExternalMount(p.Letter);
+            int? pid = MountManager.FindExternalMount(p.Device);
             if (pid == null) continue;
             var slot = Slots.FirstOrDefault(s => s.Drive.Device == p.Device);
             if (slot == null || slot.Phase != SlotPhase.Idle) continue;
+
+            Process? proc = null;
+            try { proc = Process.GetProcessById(pid.Value); } catch { continue; }
 
             var mapping = new Mapping
             {
@@ -709,6 +712,7 @@ public sealed partial class MainWindow : Window
                 State = "Mounted",
                 // The real volume label WinFsp set from -o volname.
                 VolumeName = MountManager.GetVolumeLabel(p.Letter),
+                Proc = proc,
             };
             _mappings.Add(mapping);
             slot.Mapping = mapping;

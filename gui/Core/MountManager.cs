@@ -112,7 +112,7 @@ public class MountManager
         var args = new List<string> { $@"\\.\{m.Letter}", "-f" };
         void Opt(string s) { args.Add("-o"); args.Add(s); }
         Opt($"config_file={LtfsEnv.LtfsConfFuse}");
-        Opt($"devname={m.Device.Replace('\\', '/')}");
+        Opt(DevNameOpt(m.Device));
         Opt(o.SyncTypeOption);
         if (o.CaptureIndex)
         {
@@ -233,9 +233,23 @@ public class MountManager
         log.Note($"{m.Letter} unmounted.");
     }
 
-    /// <summary>Find ltfs.exe processes from a previous session serving a drive letter.</summary>
-    public static int? FindExternalMount(string letter)
+    /// <summary>
+    /// The <c>-o devname=</c> value handed to ltfs.exe at mount, and the exact
+    /// needle <see cref="FindExternalMount"/> uses to re-find that process later.
+    /// One definition so the two can never drift apart.
+    /// </summary>
+    private static string DevNameOpt(string device) => $"devname={device.Replace('\\', '/')}";
+
+    /// <summary>
+    /// Find the ltfs.exe process from a previous session still serving a drive.
+    /// Matched on the <c>-o devname=</c> argument we pass at mount — the drive's
+    /// physical identity (<c>TAPEn</c>), which is stable and unique. (The volume
+    /// letter is on the command line too, but as <c>\\.\T:</c>, so matching a
+    /// bare letter never fit.)
+    /// </summary>
+    public static int? FindExternalMount(string device)
     {
+        var needle = DevNameOpt(device);
         try
         {
             using var searcher = new System.Management.ManagementObjectSearcher(
@@ -243,7 +257,7 @@ public class MountManager
             foreach (var obj in searcher.Get())
             {
                 var cmd = obj["CommandLine"] as string ?? "";
-                if (cmd.Contains($" {letter}", StringComparison.OrdinalIgnoreCase))
+                if (cmd.Contains(needle, StringComparison.OrdinalIgnoreCase))
                     return Convert.ToInt32(obj["ProcessId"]);
             }
         }
