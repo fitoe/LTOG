@@ -63,13 +63,22 @@ Instructions below show how to individually build each part of the project.
 
 ### 1. WinLtfs (LTFS + WinFsp)
 
-The LTFS executables, tape backends, and `winfsp-x64.dll` are built by the
-[WinLtfs](https://github.com/rlaphoenix/WinLtfs) project and consumed here as a
-pinned release.
+LTOG builds checksum-pinned [WinLtfs](https://github.com/rlaphoenix/WinLtfs)
+v1.1.1 sources with a root identity EA patch. Install the Python/MSYS2/WinFsp
+prerequisites in [native/README.md](native/README.md), then run
+`python native/build-native.py`. Output goes to `dist/winltfs/`.
+The normal `build.ps1` includes this build; `-SkipNative` reuses a matching
+patched build, not the unpatched upstream release.
 
-To build the engine from source yourself (MSYS2 + WinFsp toolchain), follow the
-build instructions in the [WinLtfs](https://github.com/rlaphoenix/WinLtfs) repo,
-then copy its `dist/` output into LTOG's `dist/winltfs/`.
+External applications can read the current mount's `ltfs.volumeSerial` and
+`ltfs.volumeUUID` through root-directory Windows EAs. See the
+[read-only example and API contract](docs/LTFS-IDENTITY.md) and
+[validation results](docs/IDENTITY-VALIDATION.md).
+The query tool also supports 59 allowlisted attributes via `--list`, `--get`,
+`--group`, `--all`, and `--path` for file metadata. Capacity, health, alerts,
+and encryption queries run on demand through the mounted filesystem, without
+adding diagnostic requests to ordinary identity EA reads. See
+[attribute queries and protocol](docs/LTFS-ATTRIBUTES.md).
 
 ### 2. GUI
 

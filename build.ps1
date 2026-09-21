@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     One-shot clean build of LTOG: the WinLtfs native engine, the WinUI 3 GUI,
     and the Windows installer.
@@ -6,27 +6,26 @@
 .DESCRIPTION
     Wipes previous build output (so nothing stale survives), then assembles, in order:
 
-      1. WinLtfs native engine      -> dist\winltfs\  (downloaded, pinned release zip)
+      1. WinLtfs native engine      -> dist\winltfs\  (pinned source + identity EA patch)
       2. Self-contained WinUI 3 GUI -> dist\          (dotnet build, .NET baked in)
       3. Windows installer          -> installer\Output\  (installer\build-installer.ps1)
 
     The licenses shipped in the WinLtfs release are kept at dist\licenses.
 
-    The LTFS engine + WinFsp port (ltfs.exe, backends, winfsp-x64.dll) is built by
-    the WinLtfs project (https://github.com/rlaphoenix/WinLtfs); LTOG bundles a
-    pinned, checksum-verified release of it. No MSYS2/WinFsp toolchain needed here.
+    The native engine is built from checksum-pinned WinLtfs sources with the
+    LTOG root identity EA patch. See native/README.md for MSYS2 prerequisites.
 
     Run from a normal PowerShell prompt (no elevation needed):
 
         pwsh -File build.ps1
 
     Build prerequisites (the script checks for these and fails clearly if missing):
-      * Internet access to fetch the pinned WinLtfs release - unless -SkipNative
+      * Python 3, MSYS2 MINGW64 build tools, and WinFsp 2.1 (see native/README.md)
       * .NET 8 SDK
       * Inno Setup 6.3+ (build-installer.ps1 can install it via winget)
 
 .PARAMETER SkipNative
-    Reuse the WinLtfs binaries already in dist\winltfs\ and skip the download. Use
+    Reuse the WinLtfs binaries already in dist\winltfs\ and skip its rebuild. Use
     when iterating on the GUI/installer. Fails if dist\winltfs\ltfs.exe is absent.
 
 .PARAMETER NoInstaller
@@ -45,6 +44,7 @@
 param(
     [switch]$SkipNative,
     [switch]$NoInstaller,
+    [string]$MsysRoot = 'C:\msys64',
     [ValidatePattern('^\d+\.\d+\.\d+(\.\d+)?$')]
     [string]$Version = '1.0.0'
 )
@@ -60,11 +60,6 @@ $GuiDir       = Join-Path $Root 'gui'
 $InstallerDir = Join-Path $Root 'installer'
 $GuiOutSub    = 'bin\x64\Release\net8.0-windows10.0.19041.0\win-x64'   # self-contained output
 
-# Pinned WinLtfs native release that LTOG bundles. Bump both together when
-# updating (get the SHA256 from the release's "digest" or `Get-FileHash`).
-$WinLtfsVersion    = '1.1.1'
-$WinLtfsDistSha256 = '880CB5F2230ACBC4DF0C67D912DDB8325529E39C93E41186D3C516AF443D7DD7'
-
 function Step([string]$m) { Write-Host "`n==> $m" -ForegroundColor Cyan }
 function Info([string]$m) { Write-Host "    $m" }
 
@@ -72,7 +67,7 @@ function Info([string]$m) { Write-Host "    $m" }
 function Remove-RepoPath([string]$path) {
     $full = [IO.Path]::GetFullPath($path)
     $rootFull = [IO.Path]::GetFullPath($Root)
-    if (-not $full.StartsWith($rootFull, [StringComparison]::OrdinalIgnoreCase) -or $full -eq $rootFull) {
+    if (-not $full.StartsWith($rootFull.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
         throw "refusing to delete '$full' (outside the repo)"
     }
     if (Test-Path -LiteralPath $full) {
@@ -101,35 +96,27 @@ if ($SkipNative) {
 }
 Info 'clean'
 
-# -------------------------------------------- 2. native (WinLtfs release) ---
+# -------------------------------------------- 2. native (patched source) ---
 if ($SkipNative) {
-    Step 'Skipping WinLtfs download (-SkipNative)'
-    if (-not (Test-Path (Join-Path $DistWinLtfs 'ltfs.exe'))) {
-        throw "dist\winltfs\ltfs.exe is missing - cannot use -SkipNative without a prior download."
+    Step 'Reusing patched native engine (-SkipNative)'
+    if (-not (Test-Path (Join-Path $DistWinLtfs 'ltfs.exe')) -or
+        -not (Test-Path (Join-Path $DistWinLtfs 'ltog-identity-build.txt'))) {
+        throw 'Missing patched engine. Run python native/build-native.py first.'
     }
-    Info 'reusing existing dist\winltfs native binaries'
+    $expectedPatch = (Get-FileHash (Join-Path $Root 'native/root-identity.patch') -Algorithm SHA256).Hash.ToLowerInvariant()
+    $manifest = Get-Content -Raw (Join-Path $DistWinLtfs 'ltog-identity-build.txt')
+    if (-not $manifest.Contains("patch-sha256=$expectedPatch")) {
+        throw 'Native patch changed; rebuild with python native/build-native.py.'
+    }
 } else {
-    Step "Fetching WinLtfs $WinLtfsVersion native engine"
-    $zip = Join-Path ([IO.Path]::GetTempPath()) "WinLtfs-v$WinLtfsVersion.zip"
-    $url = "https://github.com/rlaphoenix/WinLtfs/releases/download/" +
-           "v$WinLtfsVersion/WinLtfs-v$WinLtfsVersion.zip"
-    Invoke-WebRequest -Uri $url -OutFile $zip
-    $actual = (Get-FileHash $zip -Algorithm SHA256).Hash
-    if ($actual -ne $WinLtfsDistSha256) {
-        throw "WinLtfs zip SHA256 mismatch: got $actual, expected $WinLtfsDistSha256."
-    }
-    New-Item -ItemType Directory -Force -Path $DistWinLtfs | Out-Null
-    Expand-Archive -LiteralPath $zip -DestinationPath $DistWinLtfs -Force
-    if (-not (Test-Path (Join-Path $DistWinLtfs 'ltfs.exe'))) {
-        throw "WinLtfs zip did not contain ltfs.exe."
-    }
-    # The release ships its license texts under licenses\; keep those at dist\licenses.
-    $winltfsLicenses = Join-Path $DistWinLtfs 'licenses'
-    if (Test-Path -LiteralPath $winltfsLicenses) {
-        Remove-RepoPath $DistLicenses
-        Move-Item -LiteralPath $winltfsLicenses -Destination $DistLicenses
-    }
-    Info 'WinLtfs engine + WinFsp DLL staged into dist\winltfs (licenses -> dist\licenses)'
+    Step 'Building WinLtfs with live root identity EAs'
+    & python (Join-Path $Root 'native/build-native.py') --msys $MsysRoot
+    if ($LASTEXITCODE -ne 0) { throw 'Native engine build failed.' }
+}
+$winltfsLicenses = Join-Path $DistWinLtfs 'licenses'
+if (Test-Path -LiteralPath $winltfsLicenses) {
+    New-Item -ItemType Directory -Force -Path $DistLicenses | Out-Null
+    Copy-Item (Join-Path $winltfsLicenses '*') -Destination $DistLicenses -Recurse -Force
 }
 
 # ------------------------------------------------------------------ 3. GUI ---
@@ -154,6 +141,13 @@ if (-not (Test-Path (Join-Path $guiOut 'LTOG.exe'))) {
 New-Item -ItemType Directory -Force -Path $Dist | Out-Null
 Copy-Item (Join-Path $guiOut '*') -Destination $Dist -Recurse -Force
 Info 'self-contained GUI staged into dist\'
+New-Item -ItemType Directory -Force -Path (Join-Path $Dist 'tools') | Out-Null
+Copy-Item (Join-Path $Root 'tools/ltfs_identity.py') (Join-Path $Dist 'tools') -Force
+Copy-Item (Join-Path $Root 'tools/ltfs_attributes.json') (Join-Path $Dist 'tools') -Force
+Copy-Item (Join-Path $Root 'docs/LTFS-IDENTITY.md') $Dist -Force
+Copy-Item (Join-Path $Root 'docs/IDENTITY-VALIDATION.md') $Dist -Force
+Copy-Item (Join-Path $Root 'docs/LTFS-ATTRIBUTES.md') $Dist -Force
+
 
 # ------------------------------------------------------------ 4. installer ---
 if ($NoInstaller) {

@@ -113,6 +113,8 @@ public class MountManager
         void Opt(string s) { args.Add("-o"); args.Add(s); }
         Opt($"config_file={LtfsEnv.LtfsConfFuse}");
         Opt(DevNameOpt(m.Device));
+        // Identity EAs must reach the live mount, including media revalidation.
+        Opt("EaTimeout=0");
         Opt(o.SyncTypeOption);
         if (o.CaptureIndex)
         {

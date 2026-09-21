@@ -1,0 +1,474 @@
+[
+  {
+    "id": 2048,
+    "name": "ltfs.volumeSerial",
+    "group": "identity",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2049,
+    "name": "ltfs.volumeUUID",
+    "group": "identity",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2050,
+    "name": "ltfs.volumeName",
+    "group": "volume",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2051,
+    "name": "ltfs.volumeFormatTime",
+    "group": "volume",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2052,
+    "name": "ltfs.volumeBlocksize",
+    "group": "volume",
+    "scope": "root",
+    "ea": true,
+    "unit": "bytes"
+  },
+  {
+    "id": 2053,
+    "name": "ltfs.volumeCompression",
+    "group": "volume",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2054,
+    "name": "ltfs.labelVersion",
+    "group": "volume",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2055,
+    "name": "ltfs.labelCreator",
+    "group": "volume",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2056,
+    "name": "ltfs.partitionMap",
+    "group": "volume",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2057,
+    "name": "ltfs.indexGeneration",
+    "group": "index",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2058,
+    "name": "ltfs.indexTime",
+    "group": "index",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2059,
+    "name": "ltfs.indexVersion",
+    "group": "index",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2060,
+    "name": "ltfs.indexLocation",
+    "group": "index",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2061,
+    "name": "ltfs.indexPrevious",
+    "group": "index",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2062,
+    "name": "ltfs.indexCreator",
+    "group": "index",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2063,
+    "name": "ltfs.commitMessage",
+    "group": "index",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2064,
+    "name": "ltfs.policyExists",
+    "group": "policy",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2065,
+    "name": "ltfs.policyAllowUpdate",
+    "group": "policy",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2066,
+    "name": "ltfs.policyMaxFileSize",
+    "group": "policy",
+    "scope": "root",
+    "ea": true,
+    "unit": "bytes"
+  },
+  {
+    "id": 2067,
+    "name": "ltfs.softwareVersion",
+    "group": "software",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2068,
+    "name": "ltfs.softwareFormatSpec",
+    "group": "software",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2069,
+    "name": "ltfs.softwareVendor",
+    "group": "software",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2070,
+    "name": "ltfs.softwareProduct",
+    "group": "software",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2071,
+    "name": "ltfs.mamBarcode",
+    "group": "mam",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2072,
+    "name": "ltfs.mamVolumeName",
+    "group": "mam",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2073,
+    "name": "ltfs.mamApplicationVendor",
+    "group": "mam",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2074,
+    "name": "ltfs.mamApplicationName",
+    "group": "mam",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2075,
+    "name": "ltfs.mamApplicationVersion",
+    "group": "mam",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2076,
+    "name": "ltfs.mamApplicationFormatVersion",
+    "group": "mam",
+    "scope": "root",
+    "ea": true,
+    "unit": null
+  },
+  {
+    "id": 2077,
+    "name": "ltfs.mediaDataPartitionTotalCapacity",
+    "group": "capacity",
+    "scope": "root",
+    "ea": false,
+    "unit": "MiB"
+  },
+  {
+    "id": 2078,
+    "name": "ltfs.mediaDataPartitionAvailableSpace",
+    "group": "capacity",
+    "scope": "root",
+    "ea": false,
+    "unit": "MiB"
+  },
+  {
+    "id": 2079,
+    "name": "ltfs.mediaIndexPartitionTotalCapacity",
+    "group": "capacity",
+    "scope": "root",
+    "ea": false,
+    "unit": "MiB"
+  },
+  {
+    "id": 2080,
+    "name": "ltfs.mediaIndexPartitionAvailableSpace",
+    "group": "capacity",
+    "scope": "root",
+    "ea": false,
+    "unit": "MiB"
+  },
+  {
+    "id": 2081,
+    "name": "ltfs.mediaLoads",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2082,
+    "name": "ltfs.mediaRecoveredWriteErrors",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2083,
+    "name": "ltfs.mediaPermanentWriteErrors",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2084,
+    "name": "ltfs.mediaRecoveredReadErrors",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2085,
+    "name": "ltfs.mediaPermanentReadErrors",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2086,
+    "name": "ltfs.mediaPreviousPermanentWriteErrors",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2087,
+    "name": "ltfs.mediaPreviousPermanentReadErrors",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2088,
+    "name": "ltfs.mediaBeginningMediumPasses",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2089,
+    "name": "ltfs.mediaMiddleMediumPasses",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2090,
+    "name": "ltfs.mediaEfficiency",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2091,
+    "name": "ltfs.mediaDatasetsWritten",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2092,
+    "name": "ltfs.mediaDatasetsRead",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2093,
+    "name": "ltfs.mediaMBWritten",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": "MB (backend)"
+  },
+  {
+    "id": 2094,
+    "name": "ltfs.mediaMBRead",
+    "group": "health",
+    "scope": "root",
+    "ea": false,
+    "unit": "MB (backend)"
+  },
+  {
+    "id": 2095,
+    "name": "ltfs.mediaStorageAlert",
+    "group": "alerts",
+    "scope": "root",
+    "ea": false,
+    "unit": "bitmask"
+  },
+  {
+    "id": 2096,
+    "name": "ltfs.mediaEncrypted",
+    "group": "encryption",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2097,
+    "name": "ltfs.driveEncryptionState",
+    "group": "encryption",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2098,
+    "name": "ltfs.driveEncryptionMethod",
+    "group": "encryption",
+    "scope": "root",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2099,
+    "name": "ltfs.fileUID",
+    "group": "file",
+    "scope": "entry",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2100,
+    "name": "ltfs.createTime",
+    "group": "file",
+    "scope": "entry",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2101,
+    "name": "ltfs.modifyTime",
+    "group": "file",
+    "scope": "entry",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2102,
+    "name": "ltfs.accessTime",
+    "group": "file",
+    "scope": "entry",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2103,
+    "name": "ltfs.changeTime",
+    "group": "file",
+    "scope": "entry",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2104,
+    "name": "ltfs.backupTime",
+    "group": "file",
+    "scope": "entry",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2105,
+    "name": "ltfs.partition",
+    "group": "file",
+    "scope": "entry",
+    "ea": false,
+    "unit": null
+  },
+  {
+    "id": 2106,
+    "name": "ltfs.startblock",
+    "group": "file",
+    "scope": "entry",
+    "ea": false,
+    "unit": null
+  }
+]

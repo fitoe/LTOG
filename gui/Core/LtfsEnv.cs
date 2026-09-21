@@ -22,6 +22,7 @@ public static class LtfsEnv
             settingsOverride,
             Path.Combine(exeDir, "winltfs"),   // packaged: GUI in dist\, engine in dist\winltfs\
             exeDir,                            // engine staged flat beside the GUI
+            Path.GetFullPath(Path.Combine(exeDir, "..")), // legacy install: GUI in gui\, engine in parent
         };
         foreach (var c in candidates)
         {

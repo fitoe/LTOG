@@ -35,9 +35,42 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Set up native toolchain
+        id: msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: >-
+            make autoconf automake libtool
+            mingw-w64-x86_64-gcc mingw-w64-x86_64-tools
+            mingw-w64-x86_64-libxml2 mingw-w64-x86_64-icu
+            mingw-w64-x86_64-pkgconf
+
+      - name: Install WinFsp build runtime
+        shell: pwsh
+        run: |
+          $url = 'https://github.com/winfsp/winfsp/releases/download/v2.1/winfsp-2.1.25156.msi'
+          $msi = Join-Path $env:RUNNER_TEMP 'winfsp-2.1.25156.msi'
+          Invoke-WebRequest $url -OutFile $msi
+          if ((Get-FileHash $msi).Hash -ne '073A70E00F77423E34BED98B86E600DEF93393BA5822204FAC57A29324DB9F7A') {
+            throw 'WinFsp checksum mismatch'
+          }
+          $p = Start-Process msiexec.exe -ArgumentList @('/i', "`"$msi`"", '/qn', '/norestart') -WindowStyle Hidden -PassThru -Wait
+          if ($p.ExitCode -notin @(0, 3010)) { throw "WinFsp install failed: $($p.ExitCode)" }
+
       - name: Build installer
         shell: pwsh
-        run: pwsh -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Version $env:RELEASE_VERSION
+        env:
+          MSYS_ROOT: ${{ steps.msys2.outputs.msys2-location }}
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Version $env:RELEASE_VERSION -MsysRoot $env:MSYS_ROOT
+
+      - name: Test identity client
+        shell: pwsh
+        run: python -m unittest discover -s tests -v
+
+      - name: Test native identity attributes
+        shell: msys2 {0}
+        run: bash tests/native_identity.sh
 
       - name: Locate installer
         id: installer

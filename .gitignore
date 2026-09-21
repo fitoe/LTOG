@@ -1,6 +1,11 @@
 # Build output (binaries, runtime DLLs, generated ltfs.conf)
 /dist/
 /dist24/
+/build/
+/gui/bin/
+/gui/obj/
+/installer/Output/
+__pycache__/
 
 # Logs and editor leftovers
 *.log
