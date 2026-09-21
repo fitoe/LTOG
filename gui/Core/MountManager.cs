@@ -198,9 +198,9 @@ public class MountManager
 
     /// <summary>
     /// Graceful unmount: deliver Ctrl+C to ltfs.exe's hidden console so it writes
-    /// the final index and releases the drive; hard-kill only as a last resort.
+    /// the final index and releases the drive. Never force-kills.
     /// </summary>
-    public async Task UnmountAsync(Mapping m, IActivityLog log)
+    public async Task<bool> UnmountAsync(Mapping m, IActivityLog log)
     {
         m.State = "Unmounting...";
         Process? p = m.Proc;
@@ -208,21 +208,14 @@ public class MountManager
 
         if (p != null && !p.HasExited)
         {
-            bool sent = false;
-            if (AttachConsole(m.Pid))
-            {
-                SetConsoleCtrlHandler(IntPtr.Zero, true);    // don't kill ourselves
-                sent = GenerateConsoleCtrlEvent(0 /* CTRL_C_EVENT */, 0);
-                // give LTFS time to write the index and tear down (tape can be slow)
-                if (sent)
-                    await Task.Run(() => p.WaitForExit(120_000));
-                FreeConsole();
-                SetConsoleCtrlHandler(IntPtr.Zero, false);
-            }
+            bool sent = SignalCtrlC(m.Pid);
+            if (sent)
+                await Task.Run(() => p.WaitForExit(120_000));
             if (!sent || !p.HasExited)
             {
-                log.Note($"{m.Letter} graceful unmount failed — terminating process.", isError: true);
-                try { p.Kill(); await p.WaitForExitAsync(); } catch { }
+                log.Note($"{m.Letter} could not be unmounted (drive may be busy).", isError: true);
+                m.State = "Mounted";
+                return false;
             }
         }
 
@@ -231,6 +224,18 @@ public class MountManager
         m.Scope?.Complete(p?.HasExited == true ? p.ExitCode : null);
         m.State = "Unmounted";
         log.Note($"{m.Letter} unmounted.");
+        return true;
+    }
+
+    /// <summary>Deliver Ctrl+C to one ltfs.exe's hidden console. Returns whether it was sent.</summary>
+    private static bool SignalCtrlC(int pid)
+    {
+        if (!AttachConsole(pid)) return false;
+        SetConsoleCtrlHandler(IntPtr.Zero, true);    // don't kill ourselves
+        bool sent = GenerateConsoleCtrlEvent(0 /* CTRL_C_EVENT */, 0);
+        FreeConsole();
+        SetConsoleCtrlHandler(IntPtr.Zero, false);
+        return sent;
     }
 
     /// <summary>
