@@ -33,7 +33,7 @@
     Build the engine and GUI but stop before the installer.
 
 .PARAMETER Version
-    Version embedded into the GUI assembly and installer. Default: 1.0.0.
+    Version embedded into the GUI assembly and installer.
 
 .EXAMPLE
     pwsh -File build.ps1                 # full clean build of everything
@@ -46,7 +46,7 @@ param(
     [switch]$SkipNative,
     [switch]$NoInstaller,
     [ValidatePattern('^\d+\.\d+\.\d+(\.\d+)?$')]
-    [string]$Version = '1.0.0'
+    [string]$Version = '1.1.0'
 )
 
 Set-StrictMode -Version Latest
