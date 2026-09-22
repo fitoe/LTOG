@@ -25,6 +25,10 @@ each third-party component is governed solely by its own license.
   LGPL-2.1 so they remain upstreamable. (LGPL-2.1 code may be conveyed as part of
   a GPLv3 work via LGPL §3.) Upstream origin:
   <https://github.com/leavelet/ltfs-hp>.
+  LTOG builds WinLtfs tag `v1.1.1` with its additional LGPL-2.1
+  [`native/root-identity.patch`](native/root-identity.patch). Pinned source
+  checksums and reproduction instructions are in
+  [`native/README.md`](native/README.md) and `native/build-native.py`.
 
 ## WinFsp — GPL-3.0 with FLOSS exception
 

@@ -1,0 +1,257 @@
+--- a/ltfs/src/libltfs/xattr.c
++++ b/ltfs/src/libltfs/xattr.c
+@@ -64,6 +64,9 @@
+ #include "ltfs_fsops.h"
+ #include "arch/filename_handling.h" // HPE MD 22/09/2017 Added support for SNIA 2.4 percent encoding
+ #include "xattr.h"
++#ifdef mingw_PLATFORM
++#include "ltog_attributes.h"
++#endif
+ #include "fs.h"
+ #include "xml_libltfs.h"
+ #include "pathname.h"
+@@ -362,6 +365,23 @@
+ 		goto out;
+ 	}
+ 	nbytes += ret;
++
++#ifdef mingw_PLATFORM
++	/* Only cheap, side-effect-free metadata on root EA enumeration. Hardware
++	 * diagnostics and file metadata use the output-only query interface. */
++	if (d == vol->index->root) {
++		size_t i;
++		for (i = 0; i < LTOG_ATTRIBUTE_COUNT; ++i) {
++			size_t length;
++			if (!ltog_attributes[i].ea)
++				continue;
++			length = strlen(ltog_attributes[i].name) + 1;
++			if (size && (size_t)nbytes + length <= size)
++				memcpy(list + nbytes, ltog_attributes[i].name, length);
++			nbytes += length;
++		}
++	}
++#endif
+ 
+ 	/*
+ 	 * There used to be an _xattr_list_virtuals function which was called here.
+@@ -1057,11 +1077,23 @@
+ 		} else if (! strcmp(name, "ltfs.mediaIndexPartitionAvailableSpace")) {
+ 			ret = _xattr_get_cartridge_capacity(&cap, &cap.remaining_ip, &val, name, vol);
+ 		} else if (! strcmp(name, "ltfs.mediaEncrypted")) {
+-			ret = _xattr_get_string(tape_get_media_encrypted(vol->device), &val, name);
++			ret = tape_device_lock(vol->device);
++			if (ret == 0) {
++				ret = _xattr_get_string(tape_get_media_encrypted(vol->device), &val, name);
++				tape_device_unlock(vol->device);
++			}
+ 		} else if (! strcmp(name, "ltfs.driveEncryptionState")) {
+-			ret = _xattr_get_string(tape_get_drive_encryption_state(vol->device), &val, name);
++			ret = tape_device_lock(vol->device);
++			if (ret == 0) {
++				ret = _xattr_get_string(tape_get_drive_encryption_state(vol->device), &val, name);
++				tape_device_unlock(vol->device);
++			}
+ 		} else if (! strcmp(name, "ltfs.driveEncryptionMethod")) {
+-			ret = _xattr_get_string(tape_get_drive_encryption_method(vol->device), &val, name);
++			ret = tape_device_lock(vol->device);
++			if (ret == 0) {
++				ret = _xattr_get_string(tape_get_drive_encryption_method(vol->device), &val, name);
++				tape_device_unlock(vol->device);
++			}
+ 		} else if (! strcmp(name, "ltfs.vendor.IBM.referencedBlocks")) {
+ 			ret = _xattr_get_u64(ltfs_get_valid_block_count_unlocked(vol), &val, name);
+ 		} else if (! strcmp(name, "ltfs.vendor.IBM.trace")) {
+--- a/ltfs/src/ltfs_fuse.c
++++ b/ltfs/src/ltfs_fuse.c
+@@ -1269,6 +1269,15 @@
+ #endif /* 0 */
+ 
+ 	ltfsmsg(LTFS_DEBUG, "14052D", path);
++
++#ifdef mingw_PLATFORM
++	/* Revalidate the mounted medium before publishing its root metadata. */
++	if (!strcmp(path, "/")) {
++		ret = ltfs_test_unit_ready(priv->data);
++		if (ret < 0)
++			return errormap_fuse_error(ret);
++	}
++#endif
+ 
+ 	ret = ltfs_fsops_listxattr(path, list, size, &id, priv->data);
+ 
+@@ -1829,7 +1838,14 @@
+ 	return errormap_fuse_error(ret);
+ }
+ 
++#ifdef mingw_PLATFORM
++#include "ltog_attribute_query.h"
++#endif
++
+ struct fuse_operations ltfs_ops = {
++#ifdef mingw_PLATFORM
++	.ioctl       = ltfs_fuse_ioctl,
++#endif
+ 	.init        = ltfs_fuse_mount,
+ 	.destroy     = ltfs_fuse_umount,
+ 	.getattr     = ltfs_fuse_getattr,
+--- a/ltfs/src/main.c
++++ b/ltfs/src/main.c
+@@ -1365,6 +1365,13 @@
+ 		ltfsmsg(LTFS_INFO, "17351I");
+ #endif /* HPE_mingw_BUILD */
+ 
++#ifdef mingw_PLATFORM
++	/* A cached EA must not outlive a media change, even for CLI mounts. */
++	ret = fuse_opt_add_arg(args, "-oEaTimeout=0");
++	if (ret < 0)
++		return 1;
++#endif
++
+ 	/* now we can safely call FUSE */
+ 	ltfsmsg(LTFS_INFO, "14111I");
+ 	ltfsmsg(LTFS_INFO, "14112I");
+--- /dev/null
++++ b/ltfs/src/libltfs/ltog_attributes.h
+@@ -0,0 +1,67 @@
++/* Generated from tools/ltfs_attributes.json; LGPL-2.1. Stable command IDs. */
++#ifndef LTOG_ATTRIBUTES_H
++#define LTOG_ATTRIBUTES_H
++struct ltog_attribute { unsigned int id; const char *name; int root; int ea; };
++static const struct ltog_attribute ltog_attributes[] = {
++    {0x800, "ltfs.volumeSerial", 1, 1 },
++    {0x801, "ltfs.volumeUUID", 1, 1 },
++    {0x802, "ltfs.volumeName", 1, 1 },
++    {0x803, "ltfs.volumeFormatTime", 1, 1 },
++    {0x804, "ltfs.volumeBlocksize", 1, 1 },
++    {0x805, "ltfs.volumeCompression", 1, 1 },
++    {0x806, "ltfs.labelVersion", 1, 1 },
++    {0x807, "ltfs.labelCreator", 1, 1 },
++    {0x808, "ltfs.partitionMap", 1, 1 },
++    {0x809, "ltfs.indexGeneration", 1, 1 },
++    {0x80a, "ltfs.indexTime", 1, 1 },
++    {0x80b, "ltfs.indexVersion", 1, 1 },
++    {0x80c, "ltfs.indexLocation", 1, 1 },
++    {0x80d, "ltfs.indexPrevious", 1, 1 },
++    {0x80e, "ltfs.indexCreator", 1, 1 },
++    {0x80f, "ltfs.commitMessage", 1, 1 },
++    {0x810, "ltfs.policyExists", 1, 1 },
++    {0x811, "ltfs.policyAllowUpdate", 1, 1 },
++    {0x812, "ltfs.policyMaxFileSize", 1, 1 },
++    {0x813, "ltfs.softwareVersion", 1, 1 },
++    {0x814, "ltfs.softwareFormatSpec", 1, 1 },
++    {0x815, "ltfs.softwareVendor", 1, 1 },
++    {0x816, "ltfs.softwareProduct", 1, 1 },
++    {0x817, "ltfs.mamBarcode", 1, 1 },
++    {0x818, "ltfs.mamVolumeName", 1, 1 },
++    {0x819, "ltfs.mamApplicationVendor", 1, 1 },
++    {0x81a, "ltfs.mamApplicationName", 1, 1 },
++    {0x81b, "ltfs.mamApplicationVersion", 1, 1 },
++    {0x81c, "ltfs.mamApplicationFormatVersion", 1, 1 },
++    {0x81d, "ltfs.mediaDataPartitionTotalCapacity", 1, 0 },
++    {0x81e, "ltfs.mediaDataPartitionAvailableSpace", 1, 0 },
++    {0x81f, "ltfs.mediaIndexPartitionTotalCapacity", 1, 0 },
++    {0x820, "ltfs.mediaIndexPartitionAvailableSpace", 1, 0 },
++    {0x821, "ltfs.mediaLoads", 1, 0 },
++    {0x822, "ltfs.mediaRecoveredWriteErrors", 1, 0 },
++    {0x823, "ltfs.mediaPermanentWriteErrors", 1, 0 },
++    {0x824, "ltfs.mediaRecoveredReadErrors", 1, 0 },
++    {0x825, "ltfs.mediaPermanentReadErrors", 1, 0 },
++    {0x826, "ltfs.mediaPreviousPermanentWriteErrors", 1, 0 },
++    {0x827, "ltfs.mediaPreviousPermanentReadErrors", 1, 0 },
++    {0x828, "ltfs.mediaBeginningMediumPasses", 1, 0 },
++    {0x829, "ltfs.mediaMiddleMediumPasses", 1, 0 },
++    {0x82a, "ltfs.mediaEfficiency", 1, 0 },
++    {0x82b, "ltfs.mediaDatasetsWritten", 1, 0 },
++    {0x82c, "ltfs.mediaDatasetsRead", 1, 0 },
++    {0x82d, "ltfs.mediaMBWritten", 1, 0 },
++    {0x82e, "ltfs.mediaMBRead", 1, 0 },
++    {0x82f, "ltfs.mediaStorageAlert", 1, 0 },
++    {0x830, "ltfs.mediaEncrypted", 1, 0 },
++    {0x831, "ltfs.driveEncryptionState", 1, 0 },
++    {0x832, "ltfs.driveEncryptionMethod", 1, 0 },
++    {0x833, "ltfs.fileUID", 0, 0 },
++    {0x834, "ltfs.createTime", 0, 0 },
++    {0x835, "ltfs.modifyTime", 0, 0 },
++    {0x836, "ltfs.accessTime", 0, 0 },
++    {0x837, "ltfs.changeTime", 0, 0 },
++    {0x838, "ltfs.backupTime", 0, 0 },
++    {0x839, "ltfs.partition", 0, 0 },
++    {0x83a, "ltfs.startblock", 0, 0 },
++};
++#define LTOG_ATTRIBUTE_COUNT (sizeof(ltog_attributes) / sizeof(ltog_attributes[0]))
++#endif
+--- /dev/null
++++ b/ltfs/src/ltog_attribute_query.h
+@@ -0,0 +1,72 @@
++/* LGPL-2.1: read-only WinFsp control interface. Included by ltfs_fuse.c.
++ * A fixed output-only command per allowlisted attribute; no arbitrary xattr
++ * names, setters, tape handles or filesystem mutations are accepted.
++ */
++#include "libltfs/ltog_attributes.h"
++
++struct ltog_attribute_response {
++    uint32_t magic;
++    uint32_t version;
++    int32_t status;             /* raw LTFS error, or 0 */
++    uint32_t length;
++    char volume_uuid[40];      /* binds separate replies to one mounted volume */
++    char reserved[8];
++    char value[4032];          /* UTF-8, length delimited */
++};
++typedef char ltog_response_size_check[sizeof(struct ltog_attribute_response) == 4096 ? 1 : -1];
++
++static int ltog_query_attribute(struct ltfs_volume *vol, const char *path,
++    unsigned int cmd, unsigned int flags, void *data)
++{
++    const struct ltog_attribute *attribute = NULL;
++    struct ltog_attribute_response *response = data;
++    ltfs_file_id id;
++    int ret;
++    size_t i;
++    if (flags || !data || !path || !vol)
++        return -EINVAL;
++    for (i = 0; i < LTOG_ATTRIBUTE_COUNT; ++i) {
++        if (cmd == (unsigned int)FSP_FUSE_IOCTL(ltog_attributes[i].id, 0, 4096)) {
++            attribute = &ltog_attributes[i];
++            break;
++        }
++    }
++    if (!attribute)
++        return -ENOTTY;
++    memset(response, 0, sizeof(*response));
++    response->magic = 0x474f544c; /* LTOG, little endian */
++    response->version = 1;
++    /* Same device handle as the mount; no tape movement unless the engine
++     * needs its normal media-change revalidation. Nothing is synchronized. */
++    ret = ltfs_test_unit_ready(vol);
++    if (ret < 0)
++        return errormap_fuse_error(ret);
++    ret = attribute->root && strcmp(path, "/") ? -LTFS_NO_XATTR :
++        ltfs_fsops_getxattr(path, attribute->name, response->value,
++            sizeof(response->value), &id, vol);
++    if (ret >= 0)
++        response->length = ret;
++    else {
++        memset(response->value, 0, sizeof(response->value));
++        response->status = ret;
++    }
++    /* Fail the entire observation after failed media revalidation, rather
++     * than presenting earlier values as a valid multi-attribute report. */
++    ret = ltfs_test_unit_ready(vol);
++    if (ret < 0)
++        return errormap_fuse_error(ret);
++    ret = ltfs_get_volume_lock(false, vol);
++    if (ret < 0)
++        return errormap_fuse_error(ret);
++    if (vol->label)
++        memcpy(response->volume_uuid, vol->label->vol_uuid, 36);
++    releaseread_mrsw(&vol->lock);
++    return 0;
++}
++
++static int ltfs_fuse_ioctl(const char *path, int cmd, void *arg,
++    struct fuse_file_info *fi, unsigned int flags, void *data)
++{
++    struct ltfs_fuse_data *priv = fuse_get_context()->private_data;
++    return ltog_query_attribute(priv->data, path, (unsigned int)cmd, flags, data);
++}
