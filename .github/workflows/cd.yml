@@ -35,6 +35,13 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~\.nuget\packages
+          key: nuget-${{ hashFiles('gui/LTOG.Gui.csproj') }}
+          restore-keys: nuget-
+
       - name: Build installer
         shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Version $env:RELEASE_VERSION
@@ -58,6 +65,5 @@ jobs:
         run: |
           gh release create $env:RELEASE_TAG "${{ steps.installer.outputs.path }}" `
             --target "${{ github.sha }}" `
-            --title "LTOG $env:RELEASE_VERSION" `
-            --notes "Installer build for LTOG $env:RELEASE_VERSION." `
+            --title "$env:RELEASE_TAG" `
             --latest
